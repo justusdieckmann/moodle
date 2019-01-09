@@ -67,9 +67,11 @@ $string['title'] = 'Course name';
 $string['aria:hidecourse'] = 'Hide {$a} from view';
 $string['aria:showcourse'] = 'Show {$a} in view';
 $string['aria:hiddencourses'] = 'Show hidden courses';
+$string['aria:semestercourses'] = 'Show semester courses';
 $string['hidden'] = 'Hidden courses';
 $string['hidecourse'] = 'Hide from view';
 $string['hiddencourses'] = 'Hidden';
+$string['semestercourses'] = 'Semester';
 $string['show'] = 'Show this course';
 $string['privacy:request:preference:set'] = 'The value of the setting \'{$a->name}\' was \'{$a->value}\'';
 

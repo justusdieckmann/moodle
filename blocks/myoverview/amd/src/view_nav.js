@@ -93,6 +93,11 @@ function(
                 var filter = option.attr('data-filter');
                 var pref = option.attr('data-pref');
 
+                if(filter === 'semester' || option.is('#semester-dropdown-option')) {
+                    console.log("Juhu!");
+                    return;
+                }
+
                 root.find(Selectors.courseView.region).attr('data-' + filter, option.attr('data-value'));
                 updatePreferences(filter, pref);
 
