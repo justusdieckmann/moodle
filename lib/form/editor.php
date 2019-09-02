@@ -476,10 +476,12 @@ class MoodleQuickForm_editor extends HTML_QuickForm_element implements templatab
     /**
      * What to display when element is frozen.
      *
-     * @return empty string
+     * @return string
      */
     function getFrozenHtml() {
-
-        return '';
+        return html_writer::start_div('form-control h-auto no-overflow', array('readonly' => '', 'disabled' => '')) .
+                format_text($this->_values['text'], $this->getFormat(), array('para' => false)) .
+                html_writer::end_div() .
+                $this->_getPersistantData();
     }
 }
