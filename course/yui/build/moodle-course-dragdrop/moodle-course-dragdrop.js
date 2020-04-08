@@ -237,18 +237,6 @@ Y.extend(DRAGSECTION, M.core.dragdrop, {
                     lightbox.show();
                 },
                 success: function(tid, response) {
-                    // Update section titles, we can't simply swap them as
-                    // they might have custom title
-                    try {
-                        var responsetext = Y.JSON.parse(response.responseText);
-                        if (responsetext.error) {
-                            new M.core.ajaxException(responsetext);
-                        }
-                        M.course.format.process_sections(Y, sectionlist, responsetext, loopstart, loopend);
-                    } catch (e) {
-                        // Ignore.
-                    }
-
                     // Update all of the section IDs - first unset them, then set them
                     // to avoid duplicates in the DOM.
                     var index;
@@ -275,6 +263,18 @@ Y.extend(DRAGSECTION, M.core.dragdrop, {
                         }
                         loopend = loopend - 1;
                     } while (swapped);
+
+                    // Update section titles, we can't simply swap them as
+                    // they might have custom title
+                    try {
+                        var responsetext = Y.JSON.parse(response.responseText);
+                        if (responsetext.error) {
+                            new M.core.ajaxException(responsetext);
+                        }
+                        M.course.format.process_sections(Y, sectionlist, responsetext, loopstart, loopend);
+                    } catch (e) {
+                        // Ignore.
+                    }
 
                     window.setTimeout(function() {
                         lightbox.hide();
