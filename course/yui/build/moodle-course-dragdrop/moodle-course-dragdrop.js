@@ -56,7 +56,7 @@ Y.extend(DRAGSECTION, M.core.dragdrop, {
         // Initialise sections dragging
         this.sectionlistselector = M.course.format.get_section_wrapper(Y);
         if (this.sectionlistselector) {
-            this.sectionlistselector = '.' + CSS.COURSECONTENT + ' ' + this.sectionlistselector;
+            this.sectionlistselector = '.' + CSS.COURSECONTENT + ' ' + this.sectionlistselector + ':not(.draggable-exclude)';
 
             this.setup_for_section(this.sectionlistselector);
 
@@ -153,7 +153,7 @@ Y.extend(DRAGSECTION, M.core.dragdrop, {
         containernode.addClass(M.course.format.get_containerclass());
         var sectionnode = Y.Node.create('<' + M.course.format.get_sectionwrappernode() +
                 '></' + M.course.format.get_sectionwrappernode() + '>');
-        sectionnode.addClass(M.course.format.get_sectionwrapperclass());
+        sectionnode.addClass(M.course.format.get_sectionwrapperclass() + " draggable-exclude");
         sectionnode.setStyle('margin', 0);
         sectionnode.setContent(drag.get('node').get('innerHTML'));
         containernode.appendChild(sectionnode);
