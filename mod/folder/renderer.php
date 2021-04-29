@@ -129,7 +129,7 @@ class mod_folder_renderer extends plugin_renderer_base {
         $result = '<ul>';
         foreach ($dir['subdirs'] as $subdir) {
             $image = $this->output->pix_icon(file_folder_icon(24), $subdir['dirname'], 'moodle');
-            $filename = html_writer::tag('span', $image, array('class' => 'fp-icon')).
+            $filename = html_writer::tag('span', $image, array('class' => 'fp-icon', 'aria-hidden' => 'true')).
                     html_writer::tag('span', s($subdir['dirname']), array('class' => 'fp-filename'));
             $filename = html_writer::tag('div', $filename, array('class' => 'fp-filename-icon'));
             $result .= html_writer::tag('li', $filename. $this->htmllize_tree($tree, $subdir));
@@ -145,7 +145,7 @@ class mod_folder_renderer extends plugin_renderer_base {
             } else {
                 $image = $this->output->pix_icon(file_file_icon($file, 24), $filenamedisplay, 'moodle');
             }
-            $filename = html_writer::tag('span', $image, array('class' => 'fp-icon')).
+            $filename = html_writer::tag('span', $image, array('class' => 'fp-icon', 'aria-hidden' => 'true')).
                     html_writer::tag('span', $filenamedisplay, array('class' => 'fp-filename'));
             $urlparams = null;
             if ($tree->folder->forcedownload) {
