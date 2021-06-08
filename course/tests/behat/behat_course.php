@@ -217,10 +217,15 @@ class behat_course extends behat_base {
      *
      * @Given /^I add a "(?P<activity_or_resource_name_string>(?:[^"]|\\")*)" to section "(?P<section_number>\d+)"$/
      * @throws ElementNotFoundException Thrown by behat_base::find
+     * @throws DriverException Step not available when Javascript is disabled
      * @param string $activity
      * @param int $section
      */
     public function i_add_to_section($activity, $section) {
+
+        if (!$this->running_javascript()) {
+            throw new DriverException('The add to section step is not available with Javascript disabled');
+        }
 
         if ($this->getSession()->getPage()->find('css', 'body#page-site-index') && (int)$section <= 1) {
             // We are on the frontpage.
@@ -239,39 +244,20 @@ class behat_course extends behat_base {
 
         $activityliteral = behat_context_helper::escape(ucfirst($activity));
 
-        if ($this->running_javascript()) {
+        // Clicks add activity or resource section link.
+        $sectionxpath = $sectionxpath . "/descendant::div" .
+                "[contains(concat(' ', normalize-space(@class) , ' '), ' section-modchooser ')]/button";
 
-            // Clicks add activity or resource section link.
-            $sectionxpath = $sectionxpath . "/descendant::div" .
-                    "[contains(concat(' ', normalize-space(@class) , ' '), ' section-modchooser ')]/button";
+        $this->execute('behat_general::i_click_on', [$sectionxpath, 'xpath']);
 
-            $this->execute('behat_general::i_click_on', [$sectionxpath, 'xpath']);
+        // Clicks the selected activity if it exists.
+        $activityxpath = "//div[contains(concat(' ', normalize-space(@class), ' '), ' modchooser ')]" .
+                "/descendant::div[contains(concat(' ', normalize-space(@class), ' '), ' optioninfo ')]" .
+                "/descendant::div[contains(concat(' ', normalize-space(@class), ' '), ' optionname ')]" .
+                "[normalize-space(.)=$activityliteral]" .
+                "/parent::a";
 
-            // Clicks the selected activity if it exists.
-            $activityxpath = "//div[contains(concat(' ', normalize-space(@class), ' '), ' modchooser ')]" .
-                    "/descendant::div[contains(concat(' ', normalize-space(@class), ' '), ' optioninfo ')]" .
-                    "/descendant::div[contains(concat(' ', normalize-space(@class), ' '), ' optionname ')]" .
-                    "[normalize-space(.)=$activityliteral]" .
-                    "/parent::a";
-
-            $this->execute('behat_general::i_click_on', [$activityxpath, 'xpath']);
-
-        } else {
-            // Without Javascript.
-
-            // Selecting the option from the select box which contains the option.
-            $selectxpath = $sectionxpath . "/descendant::div" .
-                    "[contains(concat(' ', normalize-space(@class), ' '), ' section_add_menus ')]" .
-                    "/descendant::select[option[normalize-space(.)=$activityliteral]]";
-            $selectnode = $this->find('xpath', $selectxpath);
-            $selectnode->selectOption($activity);
-
-            // Go button.
-            $gobuttonxpath = $selectxpath . "/ancestor::form/descendant::input[@type='submit']";
-            $gobutton = $this->find('xpath', $gobuttonxpath);
-            $gobutton->click();
-        }
-
+        $this->execute('behat_general::i_click_on', [$activityxpath, 'xpath']);
     }
 
     /**
