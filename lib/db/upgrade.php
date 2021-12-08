@@ -4506,5 +4506,30 @@ privatefiles,moodle|/user/files.php';
         upgrade_main_savepoint(true, 2022051000.00);
     }
 
+    if ($oldversion < 2022051900.01) {
+
+        // Delete orphaned category events.
+        $DB->delete_records_subquery('event', 'id', 'id',
+            "SELECT e.id FROM {event} e LEFT JOIN {course_categories} cc ON e.categoryid = cc.id " .
+            "WHERE e.eventtype = 'category' AND cc.id IS NULL");
+
+        // Delete orphaned category event subscriptions.
+        $DB->delete_records_subquery('event_subscriptions', 'id', 'id',
+            "SELECT e.id FROM {event_subscriptions} e LEFT JOIN {course_categories} cc ON e.categoryid = cc.id " .
+            "WHERE e.eventtype = 'category' AND cc.id IS NULL");
+
+        // Delete orphaned course event subscriptions.
+        $DB->delete_records_subquery('event_subscriptions', 'id', 'id',
+            "SELECT e.id FROM {event_subscriptions} e LEFT JOIN {course} c ON e.courseid = c.id " .
+            "WHERE e.eventtype = 'course' AND c.id IS NULL");
+
+        // Delete orphaned group event subscriptions.
+        $DB->delete_records_subquery('event_subscriptions', 'id', 'id',
+            "SELECT e.id FROM {event_subscriptions} e LEFT JOIN {groups} g ON e.groupid = g.id " .
+            "WHERE e.eventtype = 'group' AND g.id IS NULL");
+
+        upgrade_main_savepoint(true, 2022051900.01);
+    }
+
     return true;
 }
