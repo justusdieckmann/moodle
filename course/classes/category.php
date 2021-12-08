@@ -2031,6 +2031,8 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
 
         // Delete all events in the category.
         $DB->delete_records('event', array('categoryid' => $this->id));
+        // Delete all event subscriptions in the category.
+        $DB->delete_records('event_subscriptions', ['categoryid' => $this->id]);
 
         // Finally delete the category and it's context.
         $categoryrecord = $this->get_db_record();
@@ -2216,6 +2218,12 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
                 );
             }
         }
+
+        // Delete all events in the category.
+        $DB->delete_records('event', array('categoryid' => $this->id));
+        // Delete all event subscriptions in the category.
+        $DB->delete_records('event_subscriptions', ['categoryid' => $this->id]);
+
         if (!question_delete_course_category($this, $newparentcat)) {
             if ($showfeedback) {
                 echo $OUTPUT->notification(get_string('errordeletingquestionsfromcategory', 'question', $catname), 'notifysuccess');

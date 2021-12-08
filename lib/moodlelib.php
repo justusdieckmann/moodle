@@ -5423,6 +5423,9 @@ function remove_course_contents($courseid, $showfeedback = true, array $options 
     $DB->delete_records('event', array('courseid' => $course->id));
     $fs->delete_area_files($coursecontext->id, 'calendar');
 
+    // Delete course and group calendar event subscriptions.
+    $DB->delete_records('event_subscriptions', ['courseid' => $course->id]);
+
     // Delete all related records in other core tables that may have a courseid
     // This array stores the tables that need to be cleared, as
     // table_name => column_name that contains the course id.
