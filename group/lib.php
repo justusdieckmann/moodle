@@ -552,6 +552,8 @@ function groups_delete_group($grouporid) {
 
     // delete group calendar events
     $DB->delete_records('event', array('groupid'=>$groupid));
+    // Delete group calendar event subscriptions.
+    $DB->delete_records('event_subscriptions', ['groupid' => $groupid]);
     //first delete usage in groupings_groups
     $DB->delete_records('groupings_groups', array('groupid'=>$groupid));
     //delete members
