@@ -1495,7 +1495,7 @@ class cm_info implements IteratorAggregate {
      * @return moodle_url Icon URL for a suitable icon to put beside this cm
      */
     public function get_icon_url($output = null) {
-        global $OUTPUT;
+        global $OUTPUT, $PAGE;
         $this->obtain_dynamic_data();
         if (!$output) {
             $output = $OUTPUT;
@@ -1519,7 +1519,11 @@ class cm_info implements IteratorAggregate {
                 }
             }
         } else {
-            $icon = $output->image_url('icon', $this->modname);
+            $iconname = 'icon';
+            if ($PAGE->theme->resolve_image_location('icon4', $this->modname, null)) {
+                $iconname = 'icon4';
+            }
+            $icon = $output->image_url($iconname, $this->modname);
         }
         return $icon;
     }

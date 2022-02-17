@@ -185,7 +185,7 @@ class content_item_readonly_repository implements content_item_readonly_reposito
      * @return array the array of content items.
      */
     public function find_all(): array {
-        global $OUTPUT, $DB, $CFG;
+        global $OUTPUT, $DB, $CFG, $PAGE;
 
         // Get all modules so we know which plugins are enabled and able to add content.
         // Only module plugins may add content items.
@@ -204,12 +204,17 @@ class content_item_readonly_repository implements content_item_readonly_reposito
             $archetype = plugin_supports('mod', $mod->name, FEATURE_MOD_ARCHETYPE, MOD_ARCHETYPE_OTHER);
             $purpose = plugin_supports('mod', $mod->name, FEATURE_MOD_PURPOSE, MOD_PURPOSE_OTHER);
 
+            $iconname = 'icon';
+            if ($PAGE->theme->resolve_image_location('icon4', $mod->name, null)) {
+                $iconname = 'icon4';
+            }
+
             $contentitem = new content_item(
                 $mod->id,
                 $mod->name,
                 new lang_string_title("modulename", $mod->name),
                 new \moodle_url(''), // No course scope, so just an empty link.
-                $OUTPUT->pix_icon('icon', '', $mod->name, ['class' => 'icon activityicon']),
+                $OUTPUT->pix_icon($iconname, '', $mod->name, ['class' => 'icon activityicon']),
                 $help,
                 $archetype,
                 'mod_' . $mod->name,
@@ -247,7 +252,7 @@ class content_item_readonly_repository implements content_item_readonly_reposito
      * @return array the array of content_item objects
      */
     public function find_all_for_course(\stdClass $course, \stdClass $user): array {
-        global $OUTPUT, $DB, $CFG;
+        global $OUTPUT, $DB, $CFG, $PAGE;
 
         // Get all modules so we know which plugins are enabled and able to add content.
         // Only module plugins may add content items.
@@ -269,12 +274,17 @@ class content_item_readonly_repository implements content_item_readonly_reposito
             $archetype = plugin_supports('mod', $mod->name, FEATURE_MOD_ARCHETYPE, MOD_ARCHETYPE_OTHER);
             $purpose = plugin_supports('mod', $mod->name, FEATURE_MOD_PURPOSE, MOD_PURPOSE_OTHER);
 
+            $iconname = 'icon';
+            if ($PAGE->theme->resolve_image_location('icon4', $mod->name, null)) {
+                $iconname = 'icon4';
+            }
+
             $contentitem = new content_item(
                 $mod->id,
                 $mod->name,
                 new lang_string_title("modulename", $mod->name),
                 new \moodle_url($urlbase, ['add' => $mod->name]),
-                $OUTPUT->pix_icon('icon', '', $mod->name, ['class' => 'icon activityicon']),
+                $OUTPUT->pix_icon($iconname, '', $mod->name, ['class' => 'icon activityicon']),
                 $help,
                 $archetype,
                 'mod_' . $mod->name,
