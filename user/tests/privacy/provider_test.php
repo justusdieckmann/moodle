@@ -103,6 +103,13 @@ class provider_test extends provider_testcase {
         $this->assertFalse(array_key_exists('pushid', $entry));
         $this->assertFalse(array_key_exists('uuid', $entry));
 
+        // User browsers.
+        $userbrowsers = (array) $writer->get_data([get_string('privacy:browserspath', 'user')]);
+        $entry = array_shift($userbrowsers);
+        $this->assertEquals('Browser 1.0', $entry['lastuseragent']);
+        // Make sure this field is not exported.
+        $this->assertFalse(array_key_exists('token', $entry));
+
         // Session data.
         $sessiondata = (array) $writer->get_data([get_string('privacy:sessionpath', 'user')]);
         $entry = array_shift($sessiondata);
@@ -182,6 +189,11 @@ class provider_test extends provider_testcase {
         $data = array_shift($records);
         $this->assertNotEquals($user->id, $data->userid);
         $this->assertEquals($user2->id, $data->userid);
+        $records = $DB->get_records('user_browsers');
+        $this->assertCount(1, $records);
+        $data = array_shift($records);
+        $this->assertNotEquals($user->id, $data->userid);
+        $this->assertEquals($user2->id, $data->userid);
 
         // Now check that there is still a record for the deleted user, but that non-critical information is removed.
         $record = $DB->get_record('user', ['id' => $user->id]);
@@ -254,6 +266,11 @@ class provider_test extends provider_testcase {
         $this->assertNotEquals($user->id, $data->userid);
         $this->assertEquals($user2->id, $data->userid);
         $records = $DB->get_records('user_devices');
+        $this->assertCount(1, $records);
+        $data = array_shift($records);
+        $this->assertNotEquals($user->id, $data->userid);
+        $this->assertEquals($user2->id, $data->userid);
+        $records = $DB->get_records('user_browsers');
         $this->assertCount(1, $records);
         $data = array_shift($records);
         $this->assertNotEquals($user->id, $data->userid);
@@ -450,6 +467,16 @@ class provider_test extends provider_testcase {
             'timemodified' => time()
         ];
         $DB->insert_record('user_devices', $userdevices);
+
+        // User browsers.
+        $userbrowsers = (object) [
+            'userid' => $user->id,
+            'token' => 'myrandomtoken',
+            'lastuseragent' => 'Browser 1.0',
+            'timecreated' => time(),
+            'timemodified' => time()
+        ];
+        $DB->insert_record('user_browsers', $userbrowsers);
 
         // Course request.
         $courserequest = (object) [

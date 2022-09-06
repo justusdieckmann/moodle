@@ -41,8 +41,9 @@ class login_notifications_test extends \advanced_testcase {
 
     /**
      * Test new login notification.
+     * @covers ::complete_user_login
      */
-    public function test_login_notification() {
+    public function test_login_notification_no_token() {
         global $SESSION;
 
         $this->resetAfterTest();
@@ -51,7 +52,6 @@ class login_notifications_test extends \advanced_testcase {
         $this->setUser(0);
 
         // Mock data for test.
-        $loginuser->lastip = '1.2.3.4.6'; // Different ip that current.
         $SESSION->isnewsessioncookie = true; // New session cookie.
         @complete_user_login($loginuser);
 
@@ -64,17 +64,18 @@ class login_notifications_test extends \advanced_testcase {
         $messages = $sink->get_messages();
         $sink->close();
 
-        // Send notification, new IP and new session.
+        // Send notification, new browser.
         $this->assertCount(1, $messages);
         $this->assertEquals($loginuser->id, $messages[0]->useridto);
         $this->assertEquals('newlogin', $messages[0]->eventtype);
     }
 
     /**
-     * Test new login notification is skipped because of same IP from last login.
+     * Test new login notification.
+     * @covers ::complete_user_login
      */
-    public function test_login_notification_skip_same_ip() {
-        global $SESSION;
+    public function test_login_notification_invalid_token() {
+        global $SESSION, $DB;
 
         $this->resetAfterTest();
 
@@ -82,7 +83,13 @@ class login_notifications_test extends \advanced_testcase {
         $this->setUser(0);
 
         // Mock data for test.
-        $SESSION->isnewsessioncookie = true;    // New session cookie.
+        $DB->insert_record('user_browsers', [
+            'userid' => $loginuser->id,
+            'token' => 'myrandomtoken',
+        ]);
+
+        $_COOKIE[self::get_login_cookiename($loginuser->id)] = 'mydifferentrandomtoken';
+        $SESSION->isnewsessioncookie = true;
         @complete_user_login($loginuser);
 
         // Redirect messages to sink and stop buffer output from CLI task.
@@ -94,14 +101,17 @@ class login_notifications_test extends \advanced_testcase {
         $messages = $sink->get_messages();
         $sink->close();
 
-        // Skip notification when we have the same previous IP even if the browser used to connect is new.
-        $this->assertCount(0, $messages);
+        // Send notification, new browser.
+        $this->assertCount(1, $messages);
+        $this->assertEquals($loginuser->id, $messages[0]->useridto);
+        $this->assertEquals('newlogin', $messages[0]->eventtype);
     }
 
     /**
-     * Test new login notification is skipped because of same browser from last login.
+     * Test new login notification is skipped because of same session from last login.
+     * @covers ::complete_user_login
      */
-    public function test_login_notification_skip_same_browser() {
+    public function test_login_notification_skip_same_session() {
         global $SESSION;
 
         $this->resetAfterTest();
@@ -110,7 +120,6 @@ class login_notifications_test extends \advanced_testcase {
         $this->setUser(0);
 
         // Mock data for test.
-        $loginuser->lastip = '1.2.3.4.6'; // Different ip that current.
         $SESSION->isnewsessioncookie = false;
         @complete_user_login($loginuser);
 
@@ -123,7 +132,42 @@ class login_notifications_test extends \advanced_testcase {
         $messages = $sink->get_messages();
         $sink->close();
 
-        // Skip notification, different ip but same browser (probably, mobile phone browser).
+        // Skip notification, same session.
+        $this->assertCount(0, $messages);
+    }
+
+    /**
+     * Test new login notification is skipped because of same browser from last login.
+     * @covers ::complete_user_login
+     */
+    public function test_login_notification_skip_same_browser() {
+        global $SESSION, $DB;
+
+        $this->resetAfterTest();
+
+        $loginuser = self::getDataGenerator()->create_user();
+        $this->setUser(0);
+
+        // Mock data for test.
+        $DB->insert_record('user_browsers', [
+            'userid' => $loginuser->id,
+            'token' => 'myrandomtoken',
+        ]);
+
+        $_COOKIE[self::get_login_cookiename($loginuser->id)] = 'myrandomtoken';
+        $SESSION->isnewsessioncookie = true;
+        @complete_user_login($loginuser);
+
+        // Redirect messages to sink and stop buffer output from CLI task.
+        $sink = $this->redirectMessages();
+        ob_start();
+        $this->runAdhocTasks('\core\task\send_login_notifications');
+        $output = ob_get_contents();
+        ob_end_clean();
+        $messages = $sink->get_messages();
+        $sink->close();
+
+        // Skip notification, same browser.
         $this->assertCount(0, $messages);
     }
 
@@ -154,6 +198,16 @@ class login_notifications_test extends \advanced_testcase {
         $sink->close();
 
         $this->assertCount(0, $messages);
+    }
+
+    /**
+     * Return the cookie name to for the device token.
+     * @param int $userid for which user to return the cookie name.
+     * @return string the cookie name.
+     */
+    private static function get_login_cookiename(int $userid): string {
+        global $CFG;
+        return 'loggedin_' . $userid . '_' . $CFG->sessioncookie;
     }
 
     /**
