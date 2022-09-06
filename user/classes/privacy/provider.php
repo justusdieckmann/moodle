@@ -135,6 +135,14 @@ class provider implements
             'timemodified' => 'privacy:metadata:timemodified'
         ];
 
+        $userbrowsers = [
+            'userid' => 'privacy:metadata:userid',
+            'token' => 'privacy:metadata:browsertoken',
+            'lastuseragent' => 'privacy:metadata:lastuseragent',
+            'timecreated' => 'privacy:metadata:timecreated',
+            'timemodified' => 'privacy:metadata:timemodified'
+        ];
+
         $usersessions = [
             'state' => 'privacy:metadata:state',
             'sid' => 'privacy:metadata:sid',
@@ -172,6 +180,7 @@ class provider implements
         $collection->add_database_table('user_password_resets', $userpasswordresets, 'privacy:metadata:passwordresettablesummary');
         $collection->add_database_table('user_lastaccess', $lastaccess, 'privacy:metadata:lastaccesstablesummary');
         $collection->add_database_table('user_devices', $userdevices, 'privacy:metadata:devicetablesummary');
+        $collection->add_database_table('user_browsers', $userbrowsers, 'privacy:metadata:browsertablesummary');
         $collection->add_database_table('course_request', $courserequest, 'privacy:metadata:requestsummary');
         $collection->add_database_table('sessions', $usersessions, 'privacy:metadata:sessiontablesummary');
         $collection->add_database_table('my_pages', $mypages, 'privacy:metadata:my_pages');
@@ -231,6 +240,7 @@ class provider implements
         static::export_lastaccess($user->id, $context);
         static::export_course_requests($user->id, $context);
         static::export_user_devices($user->id, $context);
+        static::export_user_browsers($user->id, $context);
         static::export_user_session_data($user->id, $context);
     }
 
@@ -291,6 +301,8 @@ class provider implements
         $DB->delete_records('user_password_resets', ['userid' => $userid]);
         // Delete user devices.
         $DB->delete_records('user_devices', ['userid' => $userid]);
+        // Delete user browsers.
+        $DB->delete_records('user_browsers', ['userid' => $userid]);
         // Delete user course requests.
         $DB->delete_records('course_request', ['requester' => $userid]);
         // Delete sessions.
@@ -480,6 +492,27 @@ class provider implements
                 ];
             }, $records);
             writer::with_context($context)->export_data([get_string('privacy:devicespath', 'user')], $userdevices);
+        }
+    }
+
+    /**
+     * Exports information about the user's browsers.
+     *
+     * @param  int $userid The user ID.
+     * @param  \context $context Context for this user.
+     */
+    protected static function export_user_browsers(int $userid, \context $context) {
+        global $DB;
+        $records = $DB->get_records('user_browsers', ['userid' => $userid]);
+        if (!empty($records)) {
+            $userbrowsers = (object) array_map(function($record) {
+                return [
+                    'lastuseragent' => $record->lastuseragent,
+                    'timecreated' => transform::datetime($record->timecreated),
+                    'timemodified' => transform::datetime($record->timemodified)
+                ];
+            }, $records);
+            writer::with_context($context)->export_data([get_string('privacy:browserspath', 'user')], $userbrowsers);
         }
     }
 

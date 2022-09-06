@@ -4586,21 +4586,50 @@ function complete_user_login($user) {
     // If the user is accessing from the same IP, ignore everything (most of the time will be a new session in the same browser).
     // Skip Web Service requests, CLI scripts, AJAX scripts, and request from the mobile app itself.
     $loginip = getremoteaddr();
-    $isnewip = isset($SESSION->userpreviousip) && $SESSION->userpreviousip != $loginip;
     $isvalidenv = (!WS_SERVER && !CLI_SCRIPT && !NO_MOODLE_COOKIES) || PHPUNIT_TEST;
 
-    if (!empty($SESSION->isnewsessioncookie) && $isnewip && $isvalidenv && !\core_useragent::is_moodle_app()) {
+    if (!empty($SESSION->isnewsessioncookie) && $isvalidenv && !\core_useragent::is_moodle_app()) {
 
-        $logintime = time();
-        $ismoodleapp = false;
-        $useragent = \core_useragent::get_user_agent_string();
+        $cookiename = 'loggedin_' . $USER->id . '_' . $CFG->sessioncookie;
 
-        // Schedule adhoc task to sent a login notification to the user.
-        $task = new \core\task\send_login_notifications();
-        $task->set_userid($USER->id);
-        $task->set_custom_data(compact('ismoodleapp', 'useragent', 'loginip', 'logintime'));
-        $task->set_component('core');
-        \core\task\manager::queue_adhoc_task($task);
+        $isknownbrowser = false;
+        $record = false;
+        if (isset($_COOKIE[$cookiename])) {
+            $record = $DB->get_record('user_browsers', ['userid' => $USER->id, 'token' => $_COOKIE[$cookiename]]);
+            if ($record) {
+                $isknownbrowser = true;
+            }
+        }
+
+        if (!$isknownbrowser) {
+            $record = new stdClass();
+            $record->userid = $USER->id;
+            $record->token = random_string(32);
+            $record->timecreated = time();
+        }
+
+        $record->timemodified = time();
+        $record->lastuseragent = \core_useragent::get_user_agent_string();
+
+        setcookie($cookiename, $record->token, time() + (YEARSECS * 10), $CFG->sessioncookiepath,
+            $CFG->sessioncookiedomain, is_moodle_cookie_secure(), true);
+
+        if ($isknownbrowser) {
+            $DB->update_record('user_browsers', $record);
+        } else {
+            $DB->insert_record('user_browsers', $record);
+
+            $logintime = time();
+            $ismoodleapp = false;
+            $useragent = $record->lastuseragent;
+
+            // Schedule adhoc task to send a login notification to the user.
+            $task = new \core\task\send_login_notifications();
+            $task->set_userid($USER->id);
+            $task->set_custom_data(compact('ismoodleapp', 'useragent', 'loginip', 'logintime'));
+            $task->set_component('core');
+            \core\task\manager::queue_adhoc_task($task);
+        }
     }
 
     // Queue migrating the messaging data, if we need to.
