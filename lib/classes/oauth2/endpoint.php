@@ -65,8 +65,11 @@ class endpoint extends persistent {
      * @return lang_string|boolean
      */
     protected function validate_url($value) {
+        global $CFG;
         if (strpos($value, 'https://') !== 0) {
-            return new lang_string('sslonlyaccess', 'error');
+            if ((!$CFG->ignoresecurity) ?? true) {
+                return new lang_string('sslonlyaccess', 'error');
+            }
         }
         return true;
     }

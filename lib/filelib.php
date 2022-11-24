@@ -3241,7 +3241,7 @@ class curl {
         } else {
             $this->set_security(new \core\files\curl_security_helper());
         }
-        $this->ignoresecurity = isset($settings['ignoresecurity']) ? $settings['ignoresecurity'] : false;
+        $this->ignoresecurity = $settings['ignoresecurity'] ?? $CFG->ignoresecurity ?? false;
     }
 
     /**
