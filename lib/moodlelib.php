@@ -1101,7 +1101,8 @@ function clean_param($param, $type) {
                 if ($param === $CFG->wwwroot) {
                     // Exact match;
                 } else if (preg_match(':^/:', $param)) {
-                    // Root-relative, ok!
+                    // Host relative URL, prepend wwwroot to make sure that it is inside this moodle instance.
+                    $param = $CFG->wwwroot . $param;
                 } else if (preg_match('/^' . preg_quote($CFG->wwwroot . '/', '/') . '/i', $param)) {
                     // Absolute, and matches our wwwroot.
                 } else {
