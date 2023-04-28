@@ -131,7 +131,11 @@ class assignfeedback_file_zip_importer {
         $sg = null;
 
         if ($plugin->get_subtype() == 'assignsubmission') {
-            $sg = $assignment->get_user_submission($user->id, false);
+            if ($assignment->get_instance()->teamsubmission) {
+                $sg = $assignment->get_group_submission($user->id, 0, false);
+            } else {
+                $sg = $assignment->get_user_submission($user->id, false);
+            }
         } else if ($plugin->get_subtype() == 'assignfeedback') {
             $sg = $assignment->get_user_grade($user->id, false);
         } else {
@@ -229,6 +233,29 @@ class assignfeedback_file_zip_importer {
     }
 
     /**
+     * Returns a mapping from unique user / group ids in folder names to moodle users.
+     * @param assign $assignment  - The assignment instance
+     * @return array the mapping.
+     */
+    public function get_participant_mapping(assign $assignment): array {
+        $currentgroup = groups_get_activity_group($assignment->get_course_module(), true);
+        $allusers = $assignment->list_participants($currentgroup, false);
+        $participants = array();
+        foreach ($allusers as $user) {
+            if ($assignment->get_instance()->teamsubmission) {
+                if ($group = $assignment->get_submission_group($user->id)) {
+                    if (!isset($participants[$group->id])) {
+                        $participants[$group->id] = $user;
+                    }
+                }
+            } else {
+                $participants[$assignment->get_uniqueid_for_user($user->id)] = $user;
+            }
+        }
+        return $participants;
+    }
+
+    /**
      * Process an uploaded zip file
      *
      * @param assign $assignment - The assignment instance
@@ -249,12 +276,7 @@ class assignfeedback_file_zip_importer {
         $fs = get_file_storage();
         $files = $this->get_import_files($contextid);
 
-        $currentgroup = groups_get_activity_group($assignment->get_course_module(), true);
-        $allusers = $assignment->list_participants($currentgroup, false);
-        $participants = array();
-        foreach ($allusers as $user) {
-            $participants[$assignment->get_uniqueid_for_user($user->id)] = $user;
-        }
+        $participants = $this->get_participant_mapping($assignment);
 
         foreach ($files as $unzippedfile) {
             // Set the timeout for unzipping each file.

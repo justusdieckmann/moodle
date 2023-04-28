@@ -62,12 +62,7 @@ class assignfeedback_file_import_zip_form extends moodleform implements renderab
 
         $mform->addElement('header', 'uploadzip', get_string('confirmuploadzip', 'assignfeedback_file'));
 
-        $currentgroup = groups_get_activity_group($assignment->get_course_module(), true);
-        $allusers = $assignment->list_participants($currentgroup, false);
-        $participants = array();
-        foreach ($allusers as $user) {
-            $participants[$assignment->get_uniqueid_for_user($user->id)] = $user;
-        }
+        $participants = $importer->get_participant_mapping($assignment);
 
         $fs = get_file_storage();
 
